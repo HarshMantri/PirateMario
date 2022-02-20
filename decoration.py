@@ -26,13 +26,16 @@ class Sky:
                 screen.blit(self.sky_bottom,(0,y))
 
 class Water:
-    def __init__(self, height):
+    def __init__(self, height, level_width):
         image_width = 192
-        num_tiles = int(screen_width / image_width)+1
+        max_x = level_width+screen_width
+        min_x = -level_width
+        total_x_size = (max_x - min_x)
+        num_tiles = int(total_x_size / image_width)+1
         self.water_tiles_group = pygame.sprite.Group()
 
         for i in range(num_tiles):
-            x = i*image_width
+            x = i*image_width + min_x
             y = screen_height - height
             sprite = AnimatedTile((x,y),image_width,'graphics/decoration/water')
             self.water_tiles_group.add(sprite)

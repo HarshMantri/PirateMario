@@ -13,20 +13,20 @@ def import_folder(path):
 
 def import_csv(path):
     with open(path) as file:
-        data = [row for row in reader(file, delimiter=',')]
+        data = [list(row) for row in reader(file, delimiter=',')]
     return data
 
 def cut_image(path):
     image = pygame.image.load(path).convert_alpha()
     surface_list = []
-    col_range = image.get_width() / tile_size
-    row_range = image.get_height() / tile_size
-    for col in range(int(col_range)):
-        for row in range(int(row_range)):
+    tile_num_x = int(image.get_size()[0] / tile_size)
+    tile_num_y = int(image.get_size()[1] / tile_size)
+    for row in range(tile_num_y):
+        for col in range(tile_num_x):
             surface = pygame.Surface((tile_size,tile_size),flags=pygame.SRCALPHA)
-            x = row * tile_size
-            y = col * tile_size
-            surface.blit(image,(0,0),(x, y, tile_size, tile_size))
+            x = col * tile_size
+            y = row * tile_size
+            surface.blit(image,(0,0),pygame.Rect(x, y, tile_size, tile_size))
             surface_list.append(surface)
     return surface_list
         

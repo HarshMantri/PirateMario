@@ -5,8 +5,8 @@ from settings import tile_size
 
 
 class Enemy(AnimatedTile):
-    def __init__(self, pos, size, path):
-        super().__init__(pos, size, path)
+    def __init__(self, pos, size):
+        super().__init__(pos, size, 'graphics/enemy/run')
         self.rect = self.image.get_rect(bottomleft = (self.rect.left, self.rect.top+tile_size))
         self.speed = randint(3,5)
     
