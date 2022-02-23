@@ -5,12 +5,16 @@ from decoration import Sky, Water, Clouds
 from player import Player
 from particles import ParticleEffect
 from support import import_csv, cut_image
-from settings import tile_size, screen_width
+from settings import tile_size, screen_width, screen_height
+from game_data import levels
 
 class Level:
-    def __init__(self, screen, level_no):
+    def __init__(self, screen, level_no, create_overworld):
         self.display_screen = screen
         self.world_shift = 0
+        self.create_overworld = create_overworld
+        self.current_level = level_no
+        self.unlocked_level = levels[level_no]['unlock']
 
         terrain_layout = import_csv(f'levels/{level_no}/terrain.csv')
         self.terrain_group = self.get_sprite_group(terrain_layout,'terrain')
@@ -187,6 +191,14 @@ class Level:
             landing_dust = ParticleEffect(self.player.sprite.rect.midbottom - offset, 'land')
             self.dust_group.add(landing_dust)
 
+    def check_game_won(self):
+        if pygame.sprite.spritecollide(self.player.sprite, self.goal, True):
+            self.create_overworld(self.current_level, self.unlocked_level)
+
+    def check_game_lost(self):
+        if self.player.sprite.rect.top > screen_height:
+            self.create_overworld(self.current_level, 0)
+
     def run(self):
         self.sky.draw(self.display_screen)
         self.clouds.draw(self.display_screen,self.world_shift)
@@ -230,6 +242,9 @@ class Level:
         self.goal.update(self.world_shift)
         self.goal.draw(self.display_screen)
         
+
+        self.check_game_won()
+        self.check_game_lost()
 
         self.water.draw(self.display_screen)
 
