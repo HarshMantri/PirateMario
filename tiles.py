@@ -36,12 +36,14 @@ class AnimatedTile(Tile):
         self.animate()
 
 class Coin(AnimatedTile):
-    def __init__(self, pos, size, path):
+    def __init__(self, pos, size, path, is_gold):
         super().__init__(pos,size, path)
         center_x = self.rect.x + tile_size / 2
         center_y = self.rect.y + tile_size / 2
 
         self.rect = self.image.get_rect(center = (center_x, center_y))
+
+        self.value = 5 if is_gold else 1
 
 class Crate(StaticTile):
     def __init__(self, pos, size, path):

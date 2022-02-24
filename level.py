@@ -9,10 +9,12 @@ from settings import tile_size, screen_width, screen_height
 from game_data import levels
 
 class Level:
-    def __init__(self, screen, level_no, create_overworld):
+    def __init__(self, screen, level_no, create_overworld, update_coins, damage_player):
         self.display_screen = screen
         self.world_shift = 0
         self.create_overworld = create_overworld
+        self.update_coins = update_coins
+        self.damage_player = damage_player
         self.current_level = level_no
         self.unlocked_level = levels[level_no]['unlock']
 
@@ -55,6 +57,8 @@ class Level:
 
         self.dust_group = pygame.sprite.GroupSingle()
         self.player_on_ground = False
+
+        self.explosion_particles = pygame.sprite.Group()
         
     def get_sprite_group(self, tile_data, type): 
         sprite_group = pygame.sprite.Group()
@@ -70,9 +74,9 @@ class Level:
                         sprite = StaticTile((x,y), tile_size, surface_list[int(val)])
                     if type == 'coins':
                         if val == '0':
-                            sprite = Coin((x,y),tile_size,'graphics/coins/gold')
+                            sprite = Coin((x,y),tile_size,'graphics/coins/gold', True)
                         else:
-                            sprite = Coin((x,y),tile_size,'graphics/coins/silver')
+                            sprite = Coin((x,y),tile_size,'graphics/coins/silver', False)
                     if type == 'crates':
                         sprite = Crate((x,y),tile_size,'graphics/terrain/crate.png')
                     if type == 'bg_palms':
@@ -99,7 +103,7 @@ class Level:
                 x = c_idx * tile_size
                 y = r_idx * tile_size
                 if val == '0':
-                    player_sprite = Player((x,y),self.display_screen, self.create_jump_particles)
+                    player_sprite = Player((x,y),self.display_screen, self.create_jump_particles, self.damage_player)
                     self.player.add(player_sprite)
                 elif val == '1':
                     goal_surface = pygame.image.load('graphics/character/hat.png').convert_alpha()
@@ -199,6 +203,30 @@ class Level:
         if self.player.sprite.rect.top > screen_height:
             self.create_overworld(self.current_level, 0)
 
+    def check_coin_collisions(self):
+        collided_coins =  pygame.sprite.spritecollide(self.player.sprite, self.coin_group, True)
+        if collided_coins:
+            for coin in collided_coins:
+                self.update_coins(coin.value)
+
+    def check_enemy_collisions(self):
+        enemy_collisions = pygame.sprite.spritecollide(self.player.sprite, self.enemies, False)
+
+        if enemy_collisions:
+            for enemy in enemy_collisions:
+                enemy_center = enemy.rect.centery
+                enemy_top = enemy.rect.top
+                player_bottom = self.player.sprite.rect.bottom
+
+                if enemy_top < player_bottom < enemy_center and self.player.sprite.direction.y >= 0:
+                    self.player.sprite.direction.y = -15
+                    explosion_sprite = ParticleEffect(enemy.rect.center,'explosion')
+                    self.explosion_particles.add(explosion_sprite)
+                    enemy.kill()
+                else:
+                    self.player.sprite.get_damage()
+
+
     def run(self):
         self.sky.draw(self.display_screen)
         self.clouds.draw(self.display_screen,self.world_shift)
@@ -213,6 +241,9 @@ class Level:
         self.constraints.update(self.world_shift)
         self.enemy_collision_constraints()
         self.enemies.draw(self.display_screen)
+
+        self.explosion_particles.update(self.world_shift)
+        self.explosion_particles.draw(self.display_screen)
         
         self.crates_group.update(self.world_shift)
         self.crates_group.draw(self.display_screen)
@@ -242,9 +273,11 @@ class Level:
         self.goal.update(self.world_shift)
         self.goal.draw(self.display_screen)
         
-
+        self.check_coin_collisions()
         self.check_game_won()
         self.check_game_lost()
+        self.check_enemy_collisions()
+        
 
         self.water.draw(self.display_screen)
 

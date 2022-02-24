@@ -1,8 +1,9 @@
 import pygame
 from support import import_folder
+from math import sin
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos, display_surface, create_jump_particles):
+    def __init__(self, pos, display_surface, create_jump_particles, damage_player):
         super().__init__()
         self.frames = {}
         self.frames['idle'] = import_folder('graphics/character/idle')
@@ -35,6 +36,11 @@ class Player(pygame.sprite.Sprite):
         self.display_surface = display_surface
         self.create_jump_particles = create_jump_particles
 
+        self.update_damage = damage_player
+        self.invincible =   False
+        self.invincibility_duration = 500
+        self.hurt_time = 0
+
     def animate(self):
         self.frame_index += self.animation_speed
         if self.frame_index >= len(self.frames[self.state]):
@@ -45,6 +51,12 @@ class Player(pygame.sprite.Sprite):
             image = pygame.transform.flip(image,True,False)
 
         self.image = image
+
+        if self.invincible:
+            alpha = self.wave_value()
+            self.image.set_alpha(alpha)
+        else:
+            self.image.set_alpha(255)
 
         if self.on_ground and self.on_left:
             self.rect = self.image.get_rect(bottomleft = self.rect.bottomleft)
@@ -111,11 +123,29 @@ class Player(pygame.sprite.Sprite):
             else:
                 self.state = 'idle'
 
+    def get_damage(self):
+        if not self.invincible:
+            self.update_damage(-10)
+            self.invincible = True
+            self.hurt_time = pygame.time.get_ticks()
+    
+    def invincibility_timer(self):
+        if self.invincible:
+            current_time = pygame.time.get_ticks()
+            if current_time - self.hurt_time >= self.invincibility_duration:
+                self.invincible = False
 
+    def wave_value(self):
+        value = sin(pygame.time.get_ticks())
+        if value >= 0:
+            return 255
+        else:
+            return 0
 
     def update(self):
         self.apply_input()
         self.get_state()
         self.animate()
         self.run_dust_animation()
+        self.invincibility_timer()
         

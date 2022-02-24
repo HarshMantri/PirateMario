@@ -8,6 +8,8 @@ class ParticleEffect(pygame.sprite.Sprite):
             self.frames = import_folder('graphics/character/dust_particles/jump')
         elif type == 'land':
             self.frames = import_folder('graphics/character/dust_particles/land')
+        elif type == 'explosion':
+            self.frames = import_folder('graphics/enemy/explosion')
         self.frame_index = 0
         self.animation_speed = 0.5
         self.image = self.frames[self.frame_index]
