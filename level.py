@@ -18,6 +18,10 @@ class Level:
         self.current_level = level_no
         self.unlocked_level = levels[level_no]['unlock']
 
+        # audio
+        self.coin_sound = pygame.mixer.Sound('audio/effects/coin.wav')
+        self.stomp_sound = pygame.mixer.Sound('audio/effects/stomp.wav')
+
         terrain_layout = import_csv(f'levels/{level_no}/terrain.csv')
         self.terrain_group = self.get_sprite_group(terrain_layout,'terrain')
 
@@ -127,43 +131,34 @@ class Level:
     def horizontal_movement_collision(self):
         player_sprite = self.player.sprite
         player_direction_x = player_sprite.direction.x
-        player_sprite.rect.x += player_direction_x* player_sprite.speed
+        player_sprite.collision_rect.x += player_direction_x* player_sprite.speed
         collidable_sprite = self.terrain_group.sprites()+self.fg_palms.sprites()+self.crates_group.sprites()
         for sprite in collidable_sprite:
-            if player_sprite.rect.colliderect(sprite.rect):
+            if player_sprite.collision_rect.colliderect(sprite.rect):
                 if player_direction_x > 0:
-                    player_sprite.rect.right = sprite.rect.left
+                    player_sprite.collision_rect.right = sprite.rect.left
                     player_sprite.on_right = True
-                    self.current_x = player_sprite.rect.right
                 elif player_direction_x < 0:
-                    player_sprite.rect.left = sprite.rect.right
+                    player_sprite.collision_rect.left = sprite.rect.right
                     player_sprite.on_right = False
-                    self.current_x = player_sprite.rect.left
-
-        if player_sprite.on_left and (player_direction_x >= 0 or player_sprite.rect.left < self.current_x):
-            player_sprite.on_left = False
-        if player_sprite.on_right and (player_direction_x <= 0 or player_sprite.rect.right < self.current_x):
-            player_sprite.on_right = False
         
     def vertical_mevement_collision(self):
         player_sprite = self.player.sprite
         player_sprite.apply_gravity()
         collidable_sprite = self.terrain_group.sprites()+self.fg_palms.sprites()+self.crates_group.sprites()
         for sprite in collidable_sprite:
-            if player_sprite.rect.colliderect(sprite.rect):
+            if player_sprite.collision_rect.colliderect(sprite.rect):
                 if player_sprite.direction.y > 0:
-                    player_sprite.rect.bottom = sprite.rect.top
+                    player_sprite.collision_rect.bottom = sprite.rect.top
                     player_sprite.direction.y = 0
                     player_sprite.on_ground = True
                 elif player_sprite.direction.y < 0:
-                    player_sprite.rect.top = sprite.rect.bottom
+                    player_sprite.collision_rect.top = sprite.rect.bottom
                     player_sprite.direction.y = 0
                     player_sprite.on_ceiling = True
 
         if player_sprite.on_ground and (player_sprite.direction.y < 0 or player_sprite.direction.y > 1):
             player_sprite.on_ground = False
-        if player_sprite.on_ceiling and (player_sprite.direction.y > 0):
-            player_sprite.on_ceiling = False
 
     def scroll_x(self):
         player_sprite = self.player.sprite
@@ -206,6 +201,7 @@ class Level:
     def check_coin_collisions(self):
         collided_coins =  pygame.sprite.spritecollide(self.player.sprite, self.coin_group, True)
         if collided_coins:
+            self.coin_sound.play()
             for coin in collided_coins:
                 self.update_coins(coin.value)
 
@@ -219,6 +215,7 @@ class Level:
                 player_bottom = self.player.sprite.rect.bottom
 
                 if enemy_top < player_bottom < enemy_center and self.player.sprite.direction.y >= 0:
+                    self.stomp_sound.play()
                     self.player.sprite.direction.y = -15
                     explosion_sprite = ParticleEffect(enemy.rect.center,'explosion')
                     self.explosion_particles.add(explosion_sprite)
@@ -226,13 +223,15 @@ class Level:
                 else:
                     self.player.sprite.get_damage()
 
-
     def run(self):
         self.sky.draw(self.display_screen)
         self.clouds.draw(self.display_screen,self.world_shift)
 
         self.bg_palms.update(self.world_shift)
         self.bg_palms.draw(self.display_screen)
+
+        self.dust_group.update(self.world_shift)
+        self.dust_group.draw(self.display_screen)
 
         self.terrain_group.update(self.world_shift)
         self.terrain_group.draw(self.display_screen)
@@ -255,10 +254,7 @@ class Level:
         self.coin_group.draw(self.display_screen)
 
         self.fg_palms.update(self.world_shift)
-        self.fg_palms.draw(self.display_screen)   
-
-        self.dust_group.update(self.world_shift)
-        self.dust_group.draw(self.display_screen)   
+        self.fg_palms.draw(self.display_screen)  
         
         self.player.update()
         self.horizontal_movement_collision()
