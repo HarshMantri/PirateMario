@@ -9,4 +9,6 @@ Hitting an enemy by jumping on them from the top will kill them <br/>
 HINT: The coins add to your score with the golden ones adding double the amount as the silver ones. Gotta catch them all! <br/>
 The goal is to reach the flag at the end of the level <br/>
 
+Run `python main.py` to begin
+
 Happy gaming!
