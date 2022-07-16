@@ -9,6 +9,23 @@ Hitting an enemy by jumping on them from the top will kill them <br/>
 HINT: The coins add to your score with the golden ones adding double the amount as the silver ones. Gotta catch them all! <br/>
 The goal is to reach the flag at the end of the level <br/>
 
-Run `python main.py` to begin
+To get it up and running, run
+
+```
+virtualenv .pyenv
+source .pyenv/bin/activate
+pip install requirements.txt
+python main.py
+```
+
+# Screen grabs of the game
+
+### Overworld
+
+![Overworld](./docs/images/overworld.png)
+
+### Level
+
+![Level](./docs/images/level.png)
 
 Happy gaming!
